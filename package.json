@@ -6,7 +6,8 @@
   "keywords": [
     "directus",
     "directus-extension",
-    "directus-custom-bundle"
+    "directus-custom-bundle",
+    "directus-panel-quest"
   ],
   "directus:extension": {
     "type": "bundle",
