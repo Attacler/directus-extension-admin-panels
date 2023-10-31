@@ -1,0 +1,45 @@
+{
+  "name": "directus-extension-admin-panels",
+  "version": "1.0.0",
+  "description": "Admin panels for inside of Directus",
+  "icon": "extension",
+  "keywords": [
+    "directus",
+    "directus-extension",
+    "directus-custom-bundle"
+  ],
+  "directus:extension": {
+    "type": "bundle",
+    "path": {
+      "app": "dist/app.js",
+      "api": "dist/api.js"
+    },
+    "entries": [
+      {
+        "type": "panel",
+        "name": "panel-files",
+        "source": "panel-files/src/index.ts"
+      },
+      {
+        "type": "panel",
+        "name": "panel-m2m",
+        "source": "panel-m2m/src/index.ts"
+      },
+      {
+        "type": "endpoint",
+        "name": "endpoints",
+        "source": "endpoints/src/index.ts"
+      }
+    ],
+    "host": "^9.22.1"
+  },
+  "scripts": {
+    "build": "directus-extension build",
+    "dev": "directus-extension build -w --no-minify",
+    "link": "directus-extension link",
+    "add": "directus-extension add"
+  },
+  "devDependencies": {
+    "@directus/extensions-sdk": "9.22.1"
+  }
+}
