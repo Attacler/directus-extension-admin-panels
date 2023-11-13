@@ -114,6 +114,8 @@ export default {
         limit: -1,
       });
 
+      for (const file of fileIDs) file.filesize = parseInt(file.filesize);
+
       const groupedRelations: { [key: string]: string[] } = {};
 
       for (const { collection, field } of fileRelations) {

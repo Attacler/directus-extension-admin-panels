@@ -1,6 +1,6 @@
 {
   "name": "directus-extension-admin-panels",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Admin panels for inside of Directus",
   "icon": "extension",
   "keywords": [

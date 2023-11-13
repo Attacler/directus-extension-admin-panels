@@ -28,7 +28,7 @@ yarn add directus-extension-admin-panels
 
 ## Screenshots
 
-![Unused files and empty M2M records](screenshots/UnusedFilesAndM2M.png)
+![Unused files and empty M2M records](./screenshots/UnusedFilesAndM2M.png)
 
 ## Collaborators
 
