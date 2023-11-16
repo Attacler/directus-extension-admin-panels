@@ -4,8 +4,7 @@ Adds panels to Directus to manage Directus more efficient.
 
 ## Details
 
-Directus does not have built in methods to see what files are unused or M2M records are empty, this bundle tries to solve that.
-The bundle includes 2 panels, one for viewing unused files, the other one is for detecting empty/invalid M2M records inside of the junction table.
+Directus lacks native functionalities for identifying or removing unused files and empty M2M (Many-to-Many) records. This extension aims to address this limitation. It comprises two panels: one facilitates the viewing and deletion of unused files, while the other detects and deletes empty or invalid M2M records within the junction table.
 
 ### Todo list
 
@@ -28,7 +27,8 @@ yarn add directus-extension-admin-panels
 
 ## Screenshots
 
-![Unused files and empty M2M records](./screenshots/UnusedFilesAndM2M.png)
+![Unused files](screenshots/UnusedFiles.png)
+![Unused files](screenshots/EmptyM2M.png)
 
 ## Collaborators
 

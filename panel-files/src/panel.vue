@@ -1,21 +1,50 @@
 <template>
   <div class="admin-panel" :class="{ 'has-header': showHeader }">
+    <v-button
+      :disabled="selected.length == 0 || deleting"
+      id="removeAllFiles"
+      outlined
+      @click="deleteConfirm = true"
+    >
+      Remove all ({{ selected.length }})
+    </v-button>
+    <v-dialog v-model="deleteConfirm" @esc="deleteConfirm = false">
+      <v-card>
+        <v-card-title
+          >Are you sure that you want to delete
+          {{ selected.length }} files?</v-card-title
+        >
+        <v-card-actions>
+          <v-button secondary @click="removeAllFiles"
+            ><div class="loading" v-if="deleting" />
+            <template v-else>Yes</template>
+          </v-button>
+          <v-button @click="deleteConfirm = false">Cancel</v-button>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-table
       :headers="[
         {
           text: 'Filename',
           value: 'title',
           width: 300,
-          sortable: true,
+          sortable: false,
         },
         {
           text: 'Size',
           value: 'filesize',
           width: 175,
-          sortable: true,
+          sortable: false,
         },
       ]"
       :items="files"
+      show-select="multiple"
+      selection-use-keys
+      item-key="id"
+      :sort="{ by: 'filesize', desc: false }"
+      v-model="selected"
     >
       <template #[`item.filesize`]="{ item }">
         {{ prettyBytes(item.filesize) }}
@@ -23,10 +52,6 @@
       <template #[`item-append`]="{ item }">
         <v-button icon outlined @click="openFile(item.id)" class="open-in-new">
           <v-icon name="open_in_new" />
-        </v-button>
-        <v-button icon outlined @click="deleteFile(item.id)">
-          <div class="loading" v-if="deleting" />
-          <v-icon name="delete" v-else />
         </v-button>
       </template>
     </v-table>
@@ -51,8 +76,9 @@ export default defineComponent({
   },
   data: () => ({
     files: [],
-    collections: [],
+    selected: [],
     deleting: false,
+    deleteConfirm: false,
   }),
   methods: {
     prettyBytes(size: number) {
@@ -61,23 +87,23 @@ export default defineComponent({
     openFile(id: string) {
       window.open("/admin/files/" + id, "_blank");
     },
-    async deleteFile(id: string[]) {
+    async removeAllFiles() {
       if (this.deleting) return;
       this.deleting = true;
+      await this.api.delete("/files", { data: this.selected });
 
-      await this.api.delete("/files/" + id);
-      const index = this.files.findIndex((file) => file.id == id);
-
-      this.files.splice(index, 1);
+      this.selected = [];
+      await this.loadFiles();
       this.deleting = false;
+      this.deleteConfirm = false;
+    },
+    async loadFiles() {
+      this.files = (await this.api.get("/adminPanels/files")).data;
     },
   },
   async mounted() {
     this.api = useApi();
-    const { useCollectionsStore } = useStores();
-    this.collections = useCollectionsStore().collections;
-
-    this.files = (await this.api.get("/adminPanels/files")).data;
+    this.loadFiles();
   },
 });
 </script>
@@ -85,10 +111,18 @@ export default defineComponent({
 <style scoped>
 .admin-panel {
   overflow: auto;
+  position: relative;
 }
 
 .admin-panel.has-header {
   padding: 0 12px;
+}
+
+.admin-panel #removeAllFiles {
+  position: absolute;
+  right: 24px;
+  z-index: 10;
+  top: 2px;
 }
 
 .open-in-new {

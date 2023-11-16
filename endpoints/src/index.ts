@@ -38,13 +38,13 @@ export default {
 
       const checkedRelations: string[] = [];
 
-      const collectionsWithAtleast2Relations = schema.relations
+      const collectionsWith2Relations = schema.relations
         .filter(({ collection }: relation) => {
           if (checkedRelations.indexOf(collection) != -1) return false;
 
           const filter =
             schema.relations.filter((e: relation) => e.collection == collection)
-              .length > 1;
+              .length == 2;
 
           if (filter == true) checkedRelations.push(collection);
 
@@ -54,7 +54,7 @@ export default {
 
       let itemsIDsPerCollection: { [key: string]: string | number } = {};
 
-      for (const collectionName of collectionsWithAtleast2Relations) {
+      for (const collectionName of collectionsWith2Relations) {
         const collection = schema.collections[collectionName] as collection;
         const fieldsArray = Object.values(collection.fields).filter(
           (e) => e.field != collection.primary

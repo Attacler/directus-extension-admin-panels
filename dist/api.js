@@ -1,1 +1,106 @@
-"use strict";function e(e,i,t){return null!=e.relations.find((e=>e.collection==i&&e.field==t))}const i=[{name:"endpoints",config:{id:"adminPanels",handler:(i,{services:t})=>{i.get("/m2m",(async(i,s)=>{const{accountability:n,schema:o}=i;if(1!=n.admin)return s.status(403),s.send("You don't have permission to access this.");const l=[],c=o.relations.filter((({collection:e})=>{if(-1!=l.indexOf(e))return!1;const i=o.relations.filter((i=>i.collection==e)).length>1;return 1==i&&l.push(e),i})).map((e=>e.collection));let r={};for(const i of c){const s=o.collections[i],n=Object.values(s.fields).filter((e=>e.field!=s.primary));if(n.filter((t=>!e(o,i,t.field))).length>0)continue;const l=n.filter((t=>e(o,i,t.field))).map((e=>e.field)),c=new t.ItemsService(i,{schema:o}),a=[];for(const e of l)a.push({[e]:{_null:!0}});const f=await c.readByQuery({filter:{_or:a},fields:[s.primary]});f.length>0&&(r[i]=f.map((e=>e[s.primary])))}s.json(r)})),i.get("/files",(async(e,i)=>{const{accountability:s,schema:n}=e;if(1!=s.admin)return i.status(403),i.send("You don't have permission to access this.");const o=n.relations.filter((e=>"directus_files"==e.related_collection)),l=new t.FilesService({schema:n}),c=await l.readByQuery({fields:["id","title","filesize"],limit:-1});for(const e of c)e.filesize=parseInt(e.filesize);const r={};for(const{collection:e,field:i}of o)null==r[e]&&(r[e]=[]),r[e].push(i);for(const e in r){const i=r[e],s=new t.ItemsService(e,{schema:n}),o=await s.readByQuery({fields:i,limit:-1});for(const e of o)for(const t of i)if(null!=e[t]){const i=c.findIndex((i=>i.id==e[t]));-1!=i&&c.splice(i,1)}}i.json(c)}))}}}];exports.endpoints=i,exports.hooks=[],exports.operations=[];
+'use strict';
+
+var e0 = {
+  id: "adminPanels",
+  handler: (router, { services }) => {
+    router.get("/m2m", async (_req, res) => {
+      const { accountability, schema } = _req;
+      if (accountability.admin != true) {
+        res.status(403);
+        return res.send(`You don't have permission to access this.`);
+      }
+      const checkedRelations = [];
+      const collectionsWith2Relations = schema.relations.filter(({ collection }) => {
+        if (checkedRelations.indexOf(collection) != -1)
+          return false;
+        const filter = schema.relations.filter((e) => e.collection == collection).length == 2;
+        if (filter == true)
+          checkedRelations.push(collection);
+        return filter;
+      }).map((e) => e.collection);
+      let itemsIDsPerCollection = {};
+      for (const collectionName of collectionsWith2Relations) {
+        const collection = schema.collections[collectionName];
+        const fieldsArray = Object.values(collection.fields).filter(
+          (e) => e.field != collection.primary
+        );
+        const nonRelationalFields = fieldsArray.filter(
+          (e) => !isRelation(schema, collectionName, e.field)
+        );
+        if (nonRelationalFields.length > 0)
+          continue;
+        const relationalFields = fieldsArray.filter((e) => isRelation(schema, collectionName, e.field)).map((e) => e.field);
+        const service = new services.ItemsService(collectionName, { schema });
+        const filterObject = [];
+        for (const field of relationalFields) {
+          filterObject.push({ [field]: { _null: true } });
+        }
+        const getItems = await service.readByQuery({
+          filter: { _or: filterObject },
+          fields: [collection.primary]
+        });
+        if (getItems.length > 0) {
+          itemsIDsPerCollection[collectionName] = getItems.map(
+            (e) => e[collection.primary]
+          );
+        }
+      }
+      res.json(itemsIDsPerCollection);
+    });
+    router.get("/files", async (_req, res) => {
+      const { accountability, schema } = _req;
+      if (accountability.admin != true) {
+        res.status(403);
+        return res.send(`You don't have permission to access this.`);
+      }
+      const fileRelations = schema.relations.filter(
+        (e) => e.related_collection == "directus_files"
+      );
+      const filesService = new services.FilesService({ schema });
+      const fileIDs = await filesService.readByQuery({
+        fields: ["id", "title", "filesize"],
+        limit: -1
+      });
+      for (const file of fileIDs)
+        file.filesize = parseInt(file.filesize);
+      const groupedRelations = {};
+      for (const { collection, field } of fileRelations) {
+        if (groupedRelations[collection] == null)
+          groupedRelations[collection] = [];
+        groupedRelations[collection].push(field);
+      }
+      for (const collection in groupedRelations) {
+        const fields = groupedRelations[collection];
+        const service = new services.ItemsService(collection, { schema });
+        const getItems = await service.readByQuery({
+          fields,
+          limit: -1
+        });
+        for (const item of getItems) {
+          for (const field of fields) {
+            if (item[field] != null) {
+              const index = fileIDs.findIndex(
+                (e) => e.id == item[field]
+              );
+              if (index != -1) {
+                fileIDs.splice(index, 1);
+              }
+            }
+          }
+        }
+      }
+      res.json(fileIDs);
+    });
+  }
+};
+function isRelation(schema, collectionName, field) {
+  return schema.relations.find(
+    (rel) => rel.collection == collectionName && rel.field == field
+  ) != null;
+}
+
+const hooks = [];const endpoints = [{name:'endpoints',config:e0}];const operations = [];
+
+exports.endpoints = endpoints;
+exports.hooks = hooks;
+exports.operations = operations;
